@@ -167,9 +167,6 @@ Any reproduction or use of the project's content for profit without explicit per
 - CSab6482 Reddit  
   https://www.reddit.com/r/UsbCHardware/comments/y2dbkf/tinspire_cx_ii_cas_usbc_mod_v2/
 
-- ArjanR on Thingaverse  
-  https://www.thingiverse.com/thing:4640499
-
 ### Thank You
 
 Thank you so much for engaging with my project. While this repository captures the original implementation, the project is actively evolving and V2 will be released in a separate repository with a cleaner and more refined approach.
