@@ -1,4 +1,4 @@
-# Ti-GPT (V1) by FusionTechWorks <img width="42" alt="Screenshot 2025-03-27 at 5 01 29 PM" src="https://github.com/user-attachments/assets/e601bfaa-11de-4ee2-ac2a-95db41efcc50" />
+# Ti-GPT (V1) by OtterCad
 
 ## Project Status Update
 
