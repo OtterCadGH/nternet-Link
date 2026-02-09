@@ -254,5 +254,3 @@ The next revision will include:
 • support for additional peripherals
 
 Source code and instructions for the ESP32S3 version will be released in this repository once the software layer is finalized.
-Designed and developed by William Otterson
-Mechanical Engineering, The University of Texas at Austin
