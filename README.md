@@ -112,17 +112,9 @@ All hardware and software are open source.
 
 ---
 
-## Legal and Academic Use
-
-This project is intended for learning, experimentation, and embedded systems education.
-
-Do not use this device to violate academic rules, testing policies, or institutional regulations.
-
----
-
 ## Not Affiliated
 
-This project is not affiliated with or endorsed by Texas Instruments.
+This project is not affiliated with or endorsed by Texas Instruments. Definetly not.
 
 ---
 ## Academic Integrity Notice
