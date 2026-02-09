@@ -88,9 +88,6 @@ After removal, solder wires directly to the pads:
 
 ## Step 2 — Attach the USB Mini Connector
 
-![IMG_0167](https://github.com/user-attachments/assets/2fd89cca-2656-4422-b1d0-5f484fb627b8)
-
-
 Solder the USB Mini connector to the USB pads of the CP2102:
 
 Match the signals exactly:
@@ -122,6 +119,8 @@ Important:
 
 Optional:
 You may install the toggle switch inline with the 5V line coming from the USB Mini connector to act as a power switch.
+
+![IMG_0167](https://github.com/user-attachments/assets/2fd89cca-2656-4422-b1d0-5f484fb627b8)
 
 ---
 
