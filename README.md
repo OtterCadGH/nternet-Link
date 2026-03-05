@@ -8,6 +8,7 @@ Across three generations the project evolved from a physical calculator modifica
 
 The goal is to turn the TI-Nspire into a programmable handheld computer capable of networking, messaging, and interacting with modern APIs.
 
+Discord: https://discord.gg/KkAwcwbS
 ---
 
 ## Which Guide Should I Follow?
