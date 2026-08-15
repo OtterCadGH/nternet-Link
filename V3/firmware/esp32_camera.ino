@@ -200,21 +200,46 @@ void flushCameraBuffers() {
 
 String scanNetworks() {
   Serial.println("Scanning WiFi networks...");
+
+  // Release camera buffers to free DMA/memory for WiFi radio
+  flushCameraBuffers();
+  delay(100);
   flushCameraBuffers();
 
-  int n = WiFi.scanNetworks();
+  // Ensure WiFi is in station mode and ready to scan
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(false);
+  delay(200);
+
+  // First scan attempt
+  int n = WiFi.scanNetworks(false, false, false, 300);
+  Serial.printf("Scan attempt 1: %d networks\n", n);
+
+  // Retry once if first scan finds nothing
+  if (n <= 0) {
+    WiFi.scanDelete();
+    delay(500);
+    flushCameraBuffers();
+    n = WiFi.scanNetworks(false, false, false, 500);
+    Serial.printf("Scan attempt 2: %d networks\n", n);
+  }
+
   flushCameraBuffers();
 
   String result = "NETWORKS:";
 
-  if (n == 0) {
+  if (n <= 0) {
     result += "None found";
   } else {
     for (int i = 0; i < n && i < 10; i++) {
-      if (i > 0) result += "|";
-      result += WiFi.SSID(i);
+      String ssid = WiFi.SSID(i);
+      if (ssid.length() == 0) continue;  // Skip hidden networks
+      if (result.length() > 9) result += "|";  // Add separator after first entry
+      result += ssid;
       result += "(" + String(WiFi.RSSI(i)) + "dB)";
     }
+    // If all were hidden, mark as none found
+    if (result.length() <= 9) result += "None found";
   }
 
   WiFi.scanDelete();
@@ -483,21 +508,35 @@ void setup() {
 }
 
 unsigned long lastHeartbeat = 0;
+unsigned long lastReconnectAttempt = 0;
+int reconnectAttempts = 0;
 
 void loop() {
   server.handleClient();
 
-  // Heartbeat every 30s, auto-reconnect WiFi if lost
+  // Heartbeat every 30s
   if (millis() - lastHeartbeat > 30000) {
     lastHeartbeat = millis();
     Serial.printf("[Status] Heap: %d, WiFi: %s\n",
                   ESP.getFreeHeap(),
                   WiFi.status() == WL_CONNECTED ? "OK" : "DOWN");
+  }
 
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("WiFi lost! Reconnecting...");
+  // Non-blocking WiFi reconnect with backoff (max 3 attempts, then stop)
+  if (WiFi.status() != WL_CONNECTED && reconnectAttempts < 3) {
+    unsigned long reconnectInterval = 60000UL * (reconnectAttempts + 1); // 60s, 120s, 180s
+    if (millis() - lastReconnectAttempt > reconnectInterval) {
+      lastReconnectAttempt = millis();
+      reconnectAttempts++;
+      Serial.printf("WiFi reconnect attempt %d/3...\n", reconnectAttempts);
       WiFi.reconnect();
     }
+  }
+
+  // Reset reconnect counter when WiFi comes back
+  if (WiFi.status() == WL_CONNECTED && reconnectAttempts > 0) {
+    reconnectAttempts = 0;
+    Serial.println("WiFi reconnected!");
   }
 
   // Watchdog: auto-clear busy flag after timeout
@@ -687,9 +726,11 @@ void loop() {
       if (colonPos > 0) {
         String ssid = params.substring(0, colonPos);
         String password = params.substring(colonPos + 1);
+        reconnectAttempts = 0;
         Serial1.println("OK:CONNECTING");
         Serial1.flush();
         if (connectToWiFi(ssid, password)) {
+          reconnectAttempts = 0;
           Serial1.println("WIFI:OK:" + WiFi.localIP().toString());
           Serial1.flush();
         } else {
