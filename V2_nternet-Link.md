@@ -11,6 +11,9 @@ The project began as a proof of concept serial link and evolved into a system ca
 
 Demo: https://youtube.com/shorts/zKWZ0URra5Q?si=NUPr6w3lMf3OUgO9
 ---
+3d Files:
+https://www.thingiverse.com/thing:7322781
+https://www.thingiverse.com/thing:7279226
 
 ## What It Does
 

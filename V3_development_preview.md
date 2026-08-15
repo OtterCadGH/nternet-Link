@@ -2,11 +2,20 @@
 
 ### Development Preview
 
-nternet-Link V3 is the current generation of the project and is still under active development.
+nternet-Link V3 is the current generation of the project and remains under active development.
 
 This version moves beyond a simple wireless adapter and turns the TI-Nspire calculator into a modular embedded terminal capable of interacting with external hardware and modern network services.
 
-The system now uses the **Seeed Studio XIAO ESP32S3** platform and supports expansion peripherals rather than a fixed configuration.
+The system now uses the **Seeed Studio XIAO ESP32S3** platform and supports expansion peripherals instead of a fixed configuration.
+
+---
+
+## Development Update
+
+The V3 demo programs have now been uploaded in the `/v3` folder of this repository.
+
+These demos show working communication between the calculator Lua interface and the ESP32S3 hardware.
+A full demonstration video showing the hardware, installation process, and real usage is currently being recorded and will be added to the repository soon.
 
 ---
 
@@ -19,7 +28,7 @@ Working demonstrators currently include:
 • image capture experiments
 • long range wireless messaging experiments
 
-The calculator provides the display and input, while the ESP32S3 handles communication, processing, and peripherals.
+The calculator provides the display and input while the ESP32S3 handles communication, processing, and peripherals.
 
 ---
 
@@ -41,13 +50,14 @@ The hardware platform is operational and multiple prototypes are working.
 
 I am currently collaborating with another developer who is focusing on the software architecture and communication protocol while I continue hardware integration and Lua interface development.
 
-Before release, the goal is to:
+Current goals before full release:
+
 • stabilize the firmware
 • simplify installation
 • improve reliability
 • document operation clearly
 
-Once the system is polished and reproducible, full documentation and source release will be published in this repository along with a video build and demonstration.
+Once the system is polished and reproducible, full documentation and source release will be published here along with a complete build and demonstration video.
 
 ---
 
