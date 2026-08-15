@@ -1,5 +1,5 @@
 .DS_Store
 *_old.tns
 test_ai.tns
-ds340_reference.*
-*reference.tns
+*_reference.lua
+*_reference.tns
