@@ -40,6 +40,43 @@ local COLORS = {
     progress_fill = {0, 150, 0},
 }
 
+-- Word dictionary for autocomplete (sorted, DS340 ML/AI terms)
+local WORD_DICT = {
+    "accuracy", "activation", "advantage", "algorithm", "assumption",
+    "augmentation",
+    "backpropagation", "bagging", "bayes", "beam", "between", "bias",
+    "binary", "boolean", "boosting", "bootstrap", "boundary",
+    "classification", "classifier", "climbing", "coefficient", "compare",
+    "conditional", "convergence", "convolution", "convolutional",
+    "cross-entropy",
+    "data", "dataset", "decision", "dense", "descent", "difference",
+    "diverge", "does", "dropout",
+    "ensemble", "error", "example", "explain",
+    "false", "feature", "filter", "forest", "function",
+    "generative", "global", "gradient",
+    "hidden", "hill", "hyperparameter",
+    "image", "independence", "input",
+    "kernel",
+    "lambda", "lasso", "layer", "learning", "likelihood", "linear",
+    "local", "logistic", "loss",
+    "matrix", "maximize", "minimize", "model", "momentum",
+    "naive", "network", "neural", "node", "nonlinear", "normalize",
+    "optimum", "output", "overfit", "overshoot",
+    "padding", "parameter", "penalty", "perceptron", "performance",
+    "pooling", "positive", "posterior", "precision", "prediction",
+    "principal", "prior", "probability",
+    "random", "rate", "recall", "recognition", "regression",
+    "regularization", "relu", "replacement", "restarts", "ridge",
+    "sample", "search", "sensitivity", "separable", "sigmoid",
+    "softmax", "sparse", "split", "squared", "stacking", "step",
+    "subsets", "supervised", "svm",
+    "tensor", "test", "threshold", "tradeoff", "training",
+    "transformation", "tree", "trick",
+    "underfit", "update",
+    "validation", "vanishing", "variance", "vector",
+    "weight", "what", "which", "winter", "work",
+}
+
 local function markDirty()
     platform.window:invalidate()
 end
@@ -70,9 +107,45 @@ local State = {
     pendingRescan = false,
     wifiConnected = false,
     wifiIP = "",
+    suggestions = {},
+    suggestionIdx = 1,
 }
 
 local PROCESSING_TIMEOUT = 60
+
+-- Autocomplete helpers
+
+local function getCurrentWord()
+    local text = State.inputText
+    if text == "" then return "" end
+    local lastSpace = text:find("%s[^%s]*$")
+    if lastSpace then
+        return text:sub(lastSpace + 1)
+    end
+    return text
+end
+
+local function updateSuggestions()
+    local prefix = getCurrentWord():lower()
+    State.suggestions = {}
+    State.suggestionIdx = 1
+    if prefix == "" then return end
+    for _, word in ipairs(WORD_DICT) do
+        if word:sub(1, #prefix) == prefix and word ~= prefix then
+            table.insert(State.suggestions, word)
+            if #State.suggestions >= 3 then break end
+        end
+    end
+end
+
+local function insertSuggestion()
+    local word = State.suggestions[State.suggestionIdx]
+    if not word then return end
+    local prefix = getCurrentWord()
+    State.inputText = State.inputText:sub(1, #State.inputText - #prefix) .. word .. " "
+    State.suggestions = {}
+    State.suggestionIdx = 1
+end
 
 -- ASI serial setup
 
@@ -334,7 +407,14 @@ function processResponseBuffer()
     if ipStart then
         local lineEnd = buffer:find("\n", ipStart) or #buffer + 1
         local ip = buffer:sub(ipStart + 3, lineEnd - 1)
-        State.status = "IP: " .. ip
+        ip = ip:gsub("[%s\r\n]+", "")
+        if ip ~= "" and ip ~= "0.0.0.0" then
+            State.wifiConnected = true
+            State.wifiIP = ip
+            State.status = "[OK] WiFi: " .. ip
+        else
+            State.status = "IP: " .. ip
+        end
         buffer = buffer:sub(lineEnd + 1)
     end
 
@@ -433,6 +513,7 @@ function sendSnap()
         State.isProcessing = false
     else
         State.status = "[*] SNAP sent. Waiting..."
+        pcall(function() State.port:read() end)
     end
 
     markDirty()
@@ -469,7 +550,8 @@ function sendTextQuery()
         return
     end
 
-    if State.inputText == "" then
+    local query = State.inputText:gsub("^%s+", ""):gsub("%s+$", "")
+    if query == "" then
         State.status = "[!] Type a question first!"
         markDirty()
         return
@@ -481,11 +563,11 @@ function sendTextQuery()
     State.scrollOffset = 0
     State.isProcessing = true
     State.processingStartTime = timer.getMilliSecCounter()
-    State.status = "[*] Asking: " .. State.inputText:sub(1, 18) .. "..."
+    State.status = "[*] Asking: " .. query:sub(1, 18) .. "..."
     markDirty()
 
     local success, err = pcall(function()
-        State.port:write("ASK:" .. State.inputText .. "\n")
+        State.port:write("ASK:" .. query .. "\n")
     end)
 
     if not success then
@@ -494,6 +576,7 @@ function sendTextQuery()
     else
         State.inputText = ""
         State.inputMode = false
+        pcall(function() State.port:read() end)
     end
 
     markDirty()
@@ -502,7 +585,9 @@ end
 function toggleInputMode()
     State.inputMode = not State.inputMode
     if State.inputMode then
-        State.status = "[*] Type question, ENTER=send"
+        State.suggestions = {}
+        State.suggestionIdx = 1
+        State.status = "[*] Type question, Tab=complete"
     else
         State.status = State.isConnected and "[OK] Ready. W=WiFi T=type" or "[!] Not connected"
     end
@@ -567,6 +652,7 @@ function connectToWifi()
     pcall(function()
         State.port:write("WIFI:" .. State.wifiSSID .. ":" .. State.wifiPassword .. "\n")
     end)
+    pcall(function() State.port:read() end)
 end
 
 function getWifiIP()
@@ -786,27 +872,58 @@ function drawTextArea(gc, w, h)
 end
 
 function drawInputArea(gc, w, textTop, textHeight)
+    -- Title
     gc:setColorRGB(unpack(COLORS.bg_header))
     gc:setFont("sansserif", "b", 10)
-    gc:drawString("Type your question:", CONFIG.MARGIN + 5, textTop + 5, "top")
+    gc:drawString("Type your question:", CONFIG.MARGIN + 5, textTop + 2, "top")
 
+    -- Text input box (large, fills most of the area)
+    local inputBoxY = textTop + 18
+    local suggestionBarH = 20
+    local inputBoxH = textHeight - 18 - suggestionBarH - 8
     gc:setColorRGB(unpack(COLORS.bg_input))
-    gc:fillRect(CONFIG.MARGIN + 2, textTop + 25, w - (CONFIG.MARGIN * 2) - 4, textHeight - 35)
-
+    gc:fillRect(CONFIG.MARGIN + 2, inputBoxY, w - (CONFIG.MARGIN * 2) - 4, inputBoxH)
     gc:setColorRGB(unpack(COLORS.border_input))
-    gc:drawRect(CONFIG.MARGIN + 2, textTop + 25, w - (CONFIG.MARGIN * 2) - 4, textHeight - 35)
+    gc:drawRect(CONFIG.MARGIN + 2, inputBoxY, w - (CONFIG.MARGIN * 2) - 4, inputBoxH)
 
+    -- Draw text with cursor
     gc:setColorRGB(unpack(COLORS.text_primary))
-    gc:setFont("sansserif", "r", 10)
-
+    gc:setFont("sansserif", "r", 9)
     local displayText = State.inputText .. "_"
-    local inputLines = wordWrap(displayText, w - (CONFIG.MARGIN * 2) - 20)
+    local maxChars = math.floor((w - CONFIG.MARGIN * 2 - 16) / 5)
+    if #displayText > maxChars * 2 then
+        displayText = "..." .. displayText:sub(-maxChars * 2 + 3)
+    end
+    local inputLines = wordWrap(displayText, w - (CONFIG.MARGIN * 2) - 16)
+    local ty = inputBoxY + 3
+    for _, line in ipairs(inputLines) do
+        if ty < inputBoxY + inputBoxH - 4 then
+            gc:drawString(line, CONFIG.MARGIN + 6, ty, "top")
+            ty = ty + 12
+        end
+    end
 
-    local y = textTop + 30
-    for i, line in ipairs(inputLines) do
-        if y < textTop + textHeight - 15 then
-            gc:drawString(line, CONFIG.MARGIN + 8, y, "top")
-            y = y + CONFIG.LINE_HEIGHT
+    -- Suggestion bar
+    local sugY = inputBoxY + inputBoxH + 4
+    if #State.suggestions > 0 then
+        gc:setFont("sansserif", "r", 8)
+        gc:setColorRGB(unpack(COLORS.text_hint))
+        gc:drawString("Tab:", CONFIG.MARGIN + 2, sugY + 3, "top")
+        local sx = CONFIG.MARGIN + 28
+        for i, word in ipairs(State.suggestions) do
+            local tw = (gc:getStringWidth(word) or 30) + 10
+            if i == State.suggestionIdx then
+                gc:setColorRGB(unpack(COLORS.bg_selected))
+                gc:fillRect(sx, sugY, tw, suggestionBarH)
+                gc:setColorRGB(unpack(COLORS.text_white))
+            else
+                gc:setColorRGB(220, 220, 230)
+                gc:fillRect(sx, sugY, tw, suggestionBarH)
+                gc:setColorRGB(unpack(COLORS.text_primary))
+            end
+            gc:setFont("sansserif", "r", 9)
+            gc:drawString(word, sx + 5, sugY + 3, "top")
+            sx = sx + tw + 4
         end
     end
 end
@@ -893,7 +1010,7 @@ function drawFooter(gc, w, h)
     if State.wifiMode then
         gc:drawString("Arrows=Select | ENTER=Choose | ESC=Cancel", CONFIG.MARGIN, footerTop + 14, "top")
     elseif State.inputMode then
-        gc:drawString("Type question | ENTER=Send | ESC=Cancel", CONFIG.MARGIN, footerTop + 14, "top")
+        gc:drawString("Tab=Complete ENTER=Send ESC=Cancel", CONFIG.MARGIN, footerTop + 14, "top")
     else
         gc:drawString("ENTER=Photo T=Chat H=Help Z=Reset", CONFIG.MARGIN, footerTop + 14, "top")
     end
@@ -949,6 +1066,13 @@ function on.timer()
                 markDirty()
             end
         end
+
+        -- Keep read listener alive only when waiting for a response
+        if State.isConnected and State.port and
+           (State.isProcessing or (State.wifiMode and State.wifiStep == "scanning")
+            or (State.wifiMode and State.wifiStep == "connecting")) then
+            pcall(function() State.port:read() end)
+        end
     end
 end
 
@@ -977,6 +1101,8 @@ function forceReset()
     State.inputText = ""
     State.expectedLen = 0
     State.showHelp = false
+    State.suggestions = {}
+    State.suggestionIdx = 1
 
     if State.isConnected and State.port then
         pcall(function() State.port:write("RESET\n") end)
@@ -997,6 +1123,8 @@ function on.escapeKey()
     elseif State.inputMode then
         State.inputMode = false
         State.inputText = ""
+        State.suggestions = {}
+        State.suggestionIdx = 1
         State.status = State.isConnected and "[OK] Ready. H=help" or "[!] Not connected"
     else
         forceReset()
@@ -1005,6 +1133,13 @@ function on.escapeKey()
 end
 
 function on.arrowUp()
+    if State.inputMode then
+        if #State.suggestions > 0 and State.suggestionIdx > 1 then
+            State.suggestionIdx = State.suggestionIdx - 1
+        end
+        markDirty()
+        return
+    end
     if State.wifiMode and State.wifiStep == "list" then
         if State.wifiSelected > 1 then
             State.wifiSelected = State.wifiSelected - 1
@@ -1017,6 +1152,13 @@ function on.arrowUp()
 end
 
 function on.arrowDown()
+    if State.inputMode then
+        if #State.suggestions > 0 and State.suggestionIdx < #State.suggestions then
+            State.suggestionIdx = State.suggestionIdx + 1
+        end
+        markDirty()
+        return
+    end
     if State.wifiMode and State.wifiStep == "list" then
         if State.wifiSelected < #State.wifiNetworks then
             State.wifiSelected = State.wifiSelected + 1
@@ -1035,6 +1177,12 @@ function on.arrowDown()
     end
 end
 
+function on.arrowLeft()
+end
+
+function on.arrowRight()
+end
+
 function on.charIn(char)
     if State.wifiMode and State.wifiStep == "password" then
         State.wifiPassword = State.wifiPassword .. char
@@ -1044,6 +1192,7 @@ function on.charIn(char)
 
     if State.inputMode then
         State.inputText = State.inputText .. char
+        updateSuggestions()
         markDirty()
         return
     end
@@ -1129,6 +1278,14 @@ function on.backspaceKey()
         markDirty()
     elseif State.inputMode and #State.inputText > 0 then
         State.inputText = State.inputText:sub(1, -2)
+        updateSuggestions()
+        markDirty()
+    end
+end
+
+function on.tabKey()
+    if State.inputMode and #State.suggestions > 0 then
+        insertSuggestion()
         markDirty()
     end
 end
