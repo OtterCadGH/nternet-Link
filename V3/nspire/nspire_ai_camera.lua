@@ -40,7 +40,7 @@ local COLORS = {
     progress_fill = {0, 150, 0},
 }
 
--- Word dictionary for autocomplete (sorted, DS340 ML/AI terms)
+-- Word dictionary for autocomplete (sorted ML/AI terms)
 local WORD_DICT = {
     "accuracy", "activation", "advantage", "algorithm", "assumption",
     "augmentation",
