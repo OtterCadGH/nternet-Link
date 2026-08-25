@@ -23,7 +23,7 @@ protocol, byte for byte.
 
 [![nternet-Link V4 GUI simulator](docs/img/simulator.png)](tools/gui_simulator.html)
 
-**### [🖥 Open the live simulator →](https://ottercadgh.github.io/nternet-Link/v4/tools/gui_simulator.html)**
+**### [🖥 Open the live simulator →](https://github.com/OtterCadGH/nternet-Link/blob/main/v4/tools/gui_simulator.html)**
 
 *(That live link works once GitHub Pages is enabled — see
 [Publish the demo](#publish-the-demo-optional) below. Until then, download
