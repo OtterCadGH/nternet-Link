@@ -1,3 +1,9 @@
+> **nternet-Link · Version 1 (legacy)** — [← All versions](../README.md) · [V2](../v2/) · [V3](../v3/) · [V4](../v4/)
+>
+> The original internal-mod proof of concept. Preserved for reference; not recommended to build. Start with V4.
+
+---
+
 # Ti-GPT (V1) by OtterCad
 
 ## Project Status Update

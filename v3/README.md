@@ -1,3 +1,9 @@
+> **nternet-Link · Version 3** — [← All versions](../README.md) · [V1](../v1/) · [V2](../v2/) · [V4](../v4/)
+>
+> First ESP32-S3 + camera platform. Superseded by V4 (rewritten protocol, firmware, and hardware). Code here includes the calculator app, ESP32 firmware, and a host `server/` proxy.
+
+---
+
 # nternet-Link V3
 
 ### Development Preview

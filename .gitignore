@@ -1,5 +1,9 @@
+# build / tooling artifacts
+**/test/fakeinc/
+**/__pycache__/
+*.pyc
+.pio/
+build/
+*-bak/
+fp-info-cache
 .DS_Store
-*_old.tns
-test_ai.tns
-*_reference.lua
-*_reference.tns

@@ -1,141 +1,102 @@
-# nternet-Link Project Hub
+# nternet-Link
 
-### Open Hardware Platform for TI-Nspire CX & CX II Connectivity
+**An open-hardware platform that turns a TI-Nspire graphing calculator into a
+networked handheld terminal** — Wi-Fi, an AI chat/tutor, a camera that reads
+and solves problems, and onboard storage, through a small plug-in device.
 
-This repository documents a series of projects that enable the TI-Nspire calculator to communicate with external hardware and the internet.
+Over four generations the project grew from a soldered-in modification into a
+clean, reproducible, plug-in platform with a proper communication protocol and
+custom PCBs.
 
-Across three generations the project evolved from a physical calculator modification into a fully external plug-in communication device and now into a modular wireless embedded platform.
+💬 [Discord](https://discord.gg/6HgRHHB2q)
 
-The goal is to turn the TI-Nspire into a programmable handheld computer capable of networking, messaging, and interacting with modern APIs.
-
-Discord: https://discord.gg/6HgRHHB2q
----
-
-## Which Guide Should I Follow?
-
-This repository contains **three separate builds**.
-Each represents a different stage of the project and a different level of difficulty.
-
-| Version | What It Is                                           | Skill Level          | Recommended?        |
-| ------- | ---------------------------------------------------- | -------------------- | ------------------- |
-| V1      | Internal hardware modification (Ti-GPT)              | Advanced soldering   | No, legacy          |
-| V2      | External USB wireless adapter (nternet-Link ESP32C3) | Moderate             | Yes, starting point |
-| V3      | Modular expansion platform (ESP32S3 + Camera + LoRa) | Moderate to Advanced | Current development |
-
-Open the guide that matches the device you want to build.
+> **Not affiliated with or endorsed by Texas Instruments.** This is an
+> embedded-systems and networking experiment. It is **not** designed or
+> intended for use during exams — follow your institution's rules.
 
 ---
 
-## V1 — Ti-GPT (Internal Modification)
+## ▶ Try the calculator interface in your browser
 
-**Read here → `docs/V1_Ti-GPT.md`**
+The V4 calculator UI runs as a live simulator — the on-screen calculator and a
+virtual ESP32 talk over the *real* V4 wire protocol, so you can experiment with
+the whole experience before building anything.
 
-The original proof of concept.
+[![nternet-Link V4 GUI simulator](docs/img/simulator.png)](v4/tools/gui_simulator.html)
 
-This version installs an ESP32 inside the calculator and wires directly into the motherboard USB lines.
-It enabled the first ChatGPT interface running on a TI-Nspire calculator.
-
-Important:
-This version requires opening the calculator and permanently modifying it.
-It is preserved as a historical reference and learning resource.
-
----
-
-## V2 — nternet-Link (ESP32C3 Adapter)
-
-**Read here → `docs/V2_nternet-Link.md`**
-
-The first practical and recommended version.
-
-This design moves all electronics outside the calculator and connects through the USB mini port.
-No calculator modification is required.
-
-Features:
-• USB serial communication
-• wireless networking
-• Lua applications
-• ChatGPT interface
-• file and string transfer
-
-This is the best place to start.
+**[🖥 Open the live simulator →](https://ottercadgh.github.io/nternet-Link/v4/tools/gui_simulator.html)**
+· or download [`v4/tools/gui_simulator.html`](v4/tools/gui_simulator.html) and
+open it in any browser (runs fully offline).
 
 ---
 
-## V3 — nternet-Link Modular Platform (ESP32S3)
+## Which version should I look at?
 
-**Read here → `docs/V3_development_preview.md`**
+**→ Build [V4](v4/). It's the current, recommended generation.** The others are
+here as history and reference.
 
-Current active development.
-
-This version upgrades to the XIAO ESP32S3 and introduces expansion hardware.
-
-Planned and working capabilities:
-• camera capture
-• photo to LLM API interaction
-• LoRa communication
-• Meshtastic messaging
-• calculator to calculator wireless communication
-
-The device effectively becomes a networked handheld terminal for the calculator.
+| | Version | What it is | Build it? |
+| --- | --- | --- | --- |
+| 🟢 | **[V4](v4/)** | Rewritten firmware + protocol + UI. Two custom PCBs: a full **camera** stick and a tiny **chat-only** board. Browser simulator, automated tests. | **Yes — start here** |
+| ⚪ | [V3](v3/) | First ESP32-S3 + camera platform, with a host proxy server. | Superseded |
+| ⚪ | [V2](v2/) | First external USB plug-in adapter (ESP32-C3). No calculator mod. | Superseded |
+| ⚪ | [V1](v1/) | The original — an ESP32 soldered *inside* the calculator. | Legacy / reference |
 
 ---
 
-## What This Project Is
+## How it works
 
-This project explores extending legacy educational hardware using modern embedded systems.
+```
+ TI-Nspire  ──USB──►  nternet-Link device  ──Wi-Fi──►  AI provider
+ (keyboard,           (ESP32 + USB bridge                (Groq / OpenAI /
+  screen, Lua)         + camera + SD)                     OpenRouter / local)
+```
 
-The TI-Nspire provides:
-• keyboard
-• display
-• scripting environment (Lua)
-
-The ESP32 provides:
-• networking
-• processing
-• sensors
-• wireless communication
-
-Together they form a small programmable handheld computer platform.
+The calculator supplies the keyboard and screen and runs a Lua app. The device
+is an ESP32 that bridges USB-serial to Wi-Fi, calls an AI API, drives a camera,
+and stores photos and chat logs on a microSD card. In V4 the two sides speak
+**nlink v1**, a framed protocol with CRC checks and automatic retries.
 
 ---
 
-## Project Philosophy
+## Repository layout
 
-The nternet-Link is designed to be:
+```
+├── README.md          you are here — project hub
+├── docs/              shared assets (hub images)
+├── v1/                Ti-GPT — internal mod (legacy)
+│   ├── firmware/      ESP32 .ino
+│   └── calculator/    Lua app + .tns
+├── v2/                external adapter (docs)
+├── v3/                ESP32-S3 + camera platform
+│   ├── firmware/      ESP32 .ino
+│   ├── calculator/    Lua app + .tns
+│   └── server/        host proxy server
+└── v4/                ← CURRENT: full rewrite
+    ├── README.md      tutorial + build guide (start here)
+    ├── src/ include/  ESP32 firmware (C++)
+    ├── calculator/    TI-Nspire Lua client + demo
+    ├── tools/         browser GUI simulator
+    ├── docs/          protocol spec
+    ├── test/          host-side tests
+    └── hardware/      PCB design + 4 KiCad board variants
+```
 
-• non destructive to the calculator
-• reproducible
-• inexpensive
-• hackable
-• educational
-
-All hardware and software are open source.
-
----
-
-## Not Affiliated
-
-This project is not affiliated with or endorsed by Texas Instruments. Definetly not.
-
----
-## Academic Integrity Notice
-
-This project is an embedded systems and communication interface experiment.
-
-It is not designed, intended, or marketed as a tool for use during examinations.
-
-Many schools and testing environments prohibit electronic communication devices, programmable computers, or modified calculators. You are responsible for following the rules of your institution.
-
-The author does not encourage, support, or condone using this project to gain unfair academic advantage or to bypass testing policies.
-
-This repository exists for learning about:
-• USB communication
-• serial protocols
-• embedded networking
-• hardware interfacing
-• software integration
-
-If you bring this device into an exam, that is your decision and your responsibility. Dont be that guy.
+Each version folder has its own README. **New here? Open [`v4/`](v4/).**
 
 ---
-YouTube demonstrations and development logs will accompany future releases.
+
+## The story
+
+**V1 (2025)** proved the concept by soldering an ESP32 onto the calculator's
+USB lines. **V2** moved all the electronics *outside* into a plug-in adapter —
+no calculator modification. **V3** jumped to the ESP32-S3 with a camera and a
+host proxy. **V4** is the ground-up rewrite: a reliable checksummed protocol,
+no API keys in the source (they live in the device's flash), any
+OpenAI-compatible AI provider, a browser simulator, automated tests, and two
+custom circuit boards.
+
+## License / spirit
+
+Open hardware and software — modify, improve, and share. Built for learning
+about USB, serial protocols, embedded networking, and hardware interfacing.

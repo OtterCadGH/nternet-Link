@@ -1,3 +1,9 @@
+> **nternet-Link · Version 2** — [← All versions](../README.md) · [V1](../v1/) · [V3](../v3/) · [V4](../v4/)
+>
+> The first external plug-in adapter (ESP32-C3). Superseded by V4.
+
+---
+
 # nternet-Link
 
 ### Open Source Wireless Link Adapter for TI-Nspire CX & CX II Calculators
