@@ -8,7 +8,7 @@ Over four generations the project grew from a soldered-in modification into a
 clean, reproducible, plug-in platform with a proper communication protocol and
 custom PCBs.
 
-💬 [Discord](https://discord.gg/6HgRHHB2q)
+💬 [Discord](https://discord.gg/aUDSEgPx9)
 
 > **Not affiliated with or endorsed by Texas Instruments.** This is an
 > embedded-systems and networking experiment. It is **not** designed or
