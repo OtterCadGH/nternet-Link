@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "filename": "nlink-stick.kicad_pro",
+    "version": 1
+  },
+  "boards": [],
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  },
+  "sheets": []
+}
