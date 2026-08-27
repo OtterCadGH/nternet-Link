@@ -230,11 +230,11 @@ def add_camera_sd(sch, ctx):
     ctx.rcl("C", "10u", (196, 145), "+3V3", "GND",
             fp="Capacitor_SMD:C_0805_2012Metric")
 
-def add_program(sch, ctx):
+def add_program(sch, ctx, j4_fp="Connector:Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical"):
     # --- programming pads + straps + LED -------------------------------------
     sch.text("PROGRAM — TC2030/pogo: USB + straps (IO0 low at boot = flash)", (130, 82), 1.7)
     sch.place("J4", "Connector_Generic", "Conn_01x06", "PROG_PADS_TC2030",
-              "Connector:Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical",
+              j4_fp,
               (150, 100),
               {"1": "+3V3", "2": "GND", "3": "EN", "4": "IO0",
                "5": "USB_DM", "6": "USB_DP"})
@@ -373,6 +373,9 @@ def add_mcu_c3(sch, ctx):
 # board stub with outline
 # ---------------------------------------------------------------------------
 def write_pcb(path, w, h):
+    if os.path.exists(path):
+        print(f"  (kept existing {path} - not overwriting board work)")
+        return
     open(path, "w").write(f"""(kicad_pcb (version 20221018) (generator nlink_gen)
   (general (thickness 1.0))
   (paper "A4")
@@ -420,7 +423,11 @@ def build(variant):
     add_shared(sch, ctx)            # calc plug + ESD + bridge + 3V3 buck
     if full:
         add_camera_sd(sch, ctx)     # OV5640 FPC + microSD
-    add_program(sch, ctx)           # TC2030 pads + straps + LED
+    # lite uses hole-free SMD pogo pads (TC2030 drills can't clear a board this small)
+    j4_fp = ("Connector_PinHeader_1.27mm:PinHeader_2x03_P1.27mm_Vertical_SMD"
+             if variant == "lite" else
+             "Connector:Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
+    add_program(sch, ctx, j4_fp)    # prog pads + straps + LED
     globals()[mcu_fn](sch, ctx)     # MCU section
     sch.write(os.path.join(d, f"{name}.kicad_sch"))
     write_pro(os.path.join(d, f"{name}.kicad_pro"), name)
