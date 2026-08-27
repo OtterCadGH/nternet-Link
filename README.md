@@ -5,6 +5,8 @@ networked handheld terminal.** It adds Wi-Fi, an AI chat/tutor, a camera that
 reads and solves problems, and onboard storage, all through a small plug-in
 device.
 
+New to the Nspire scene? The spelling "nternet" is intentional. The Nspire's name plays on "inspire", and community projects follow suit by dropping the first letter, like the Ndless jailbreak playing on "endless". nternet is "internet", Nspire style.
+
 Over four generations the project grew from a soldered-in modification into a
 clean, reproducible, plug-in platform with a proper communication protocol and
 custom PCBs.
