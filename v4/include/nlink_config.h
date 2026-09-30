@@ -33,7 +33,9 @@
 #endif
 #ifndef NLINK_STATUS_LED
   #if defined(NLINK_BOARD_LITE_C3)
-    #define NLINK_STATUS_LED 8    // C3-MINI-1 common LED pin
+    // nlink-lite v4.1: LED moved to GPIO10. GPIO8 is a C3 boot strap (must
+    // read high for download mode), so it no longer drives the LED.
+    #define NLINK_STATUS_LED 10
   #else
     #define NLINK_STATUS_LED 1
   #endif

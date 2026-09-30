@@ -159,12 +159,16 @@ class Ctx:
 # ---------------------------------------------------------------------------
 # shared circuitry (both variants)
 # ---------------------------------------------------------------------------
-def add_shared(sch, ctx):
+def add_shared(sch, ctx, lite=False):
     # --- calculator plug + ESD + bridge --------------------------------------
     sch.text("USB BRIDGE — calc mini-B plug, ESD, CP2102N", (30, 22), 1.7)
     sch.place("J1", "Connector_Generic", "Conn_01x05", "USB_MiniB_PLUG_to_calc",
-              "", (40, 40),
-              {"1": "VBUS_IN", "2": "CALC_DM", "3": "CALC_DP", "5": "GND"},
+              "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical" if lite else "",
+              (40, 40),
+              {"1": "VBUS_IN", "2": "CALC_DM", "3": "CALC_DP", "5": "GND",
+               # lite: ID (pin 4) grounded so the Nspire enters USB host mode
+               # and turns on VBUS (mini-A behavior). Harmless with a mini-A plug.
+               **({"4": "GND"} if lite else {})},
               {"MPN": "mini-B male plug — see PCB-DESIGN.md options"})
     sch.place("U5", "Power_Protection", "USBLC6-2P6", "USBLC6-2SC6",
               "Package_TO_SOT_SMD:SOT-23-6", (70, 40),
@@ -172,17 +176,24 @@ def add_shared(sch, ctx):
                "5": "VBUS", "2": "GND"})
     sch.place("U3", "Interface_USB", "CP2102N-Axx-xQFN24", "CP2102N-A02-GQFN24",
               "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm", (110, 45),
-              {"3": "CALC_DP", "4": "CALC_DM", "8": "VBUS",
+              {"3": "CALC_DP", "4": "CALC_DM", "8": "CP_VBUS" if lite else "VBUS",
                "5": "+3V3", "6": "+3V3", "7": "+3V3",
                "9": "CP_RSTn", "20": "UART_TX", "21": "UART_RX",
                "2": "GND", "25": "GND"})
-    ctx.rcl("R", "10k", (140, 30), "+3V3", "CP_RSTn")
+    # CP2102N datasheet: "a 1 kOhm pull-up on the RSTb pin is recommended"
+    ctx.rcl("R", "1k" if lite else "10k", (140, 30), "+3V3", "CP_RSTn")
     ctx.rcl("C", "100n", (150, 30), "+3V3", "GND")
     ctx.rcl("C", "4.7u", (160, 30), "+3V3", "GND")
+    if lite:
+        # CP2102N datasheet: VBUS sense needs a divider (abs max VIO+2.5V;
+        # VIO is 0V during buck soft start). 5V -> 3.41V at the pin.
+        ctx.rcl("R", "22.1k", (170, 30), "VBUS", "CP_VBUS")
+        ctx.rcl("R", "47.5k", (178, 30), "CP_VBUS", "GND")
 
     # --- power ---------------------------------------------------------------
     sch.text("POWER — VBUS switch + 3V3 buck", (30, 82), 1.7)
-    sch.place("SW1", "Switch", "SW_SPDT", "PWR_SW", "", (40, 95),
+    sch.place("SW1", "Switch", "SW_SPDT", "PWR_SW",
+              "Button_Switch_SMD:SW_SPDT_PCM12" if lite else "", (40, 95),
               {"2": "VBUS_IN", "1": "VBUS"})
     sch.place("U4", "Regulator_Switching", "TLV62568DBV", "TLV62569DBV",
               "Package_TO_SOT_SMD:SOT-23-5", (70, 95),
@@ -194,6 +205,11 @@ def add_shared(sch, ctx):
             fp="Capacitor_SMD:C_0805_2012Metric")
     ctx.rcl("C", "22u", (124, 88), "+3V3", "GND",
             fp="Capacitor_SMD:C_0805_2012Metric")
+    if lite:
+        # TLV62569 is validated for 10-47uF output. Lite total on +3V3:
+        # 22u here + 10u/100n at the module + 4.7u/100n at the bridge.
+        sch.text("lite: TLV62569 Cout 10-47uF - no 100uF bulk", (30, 112), 1.5)
+        return
     ctx.rcl("C", "22u", (132, 88), "+3V3", "GND",
             fp="Capacitor_SMD:C_0805_2012Metric")
     ctx.rcl("C", "100u", (140, 88), "+3V3", "GND",
@@ -230,17 +246,19 @@ def add_camera_sd(sch, ctx):
     ctx.rcl("C", "10u", (196, 145), "+3V3", "GND",
             fp="Capacitor_SMD:C_0805_2012Metric")
 
-def add_program(sch, ctx, j4_fp="Connector:Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical"):
+def add_program(sch, ctx, j4_fp="Connector:Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical",
+                boot_net="IO0"):
     # --- programming pads + straps + LED -------------------------------------
-    sch.text("PROGRAM — TC2030/pogo: USB + straps (IO0 low at boot = flash)", (130, 82), 1.7)
+    pin = "GPIO9" if boot_net == "BOOT" else "IO0"
+    sch.text(f"PROGRAM — TC2030/pogo: USB + straps ({pin} low at boot = flash)", (130, 82), 1.7)
     sch.place("J4", "Connector_Generic", "Conn_01x06", "PROG_PADS_TC2030",
               j4_fp,
               (150, 100),
-              {"1": "+3V3", "2": "GND", "3": "EN", "4": "IO0",
+              {"1": "+3V3", "2": "GND", "3": "EN", "4": boot_net,
                "5": "USB_DM", "6": "USB_DP"})
     ctx.rcl("R", "10k", (175, 92), "+3V3", "EN")
     ctx.rcl("C", "100n", (183, 92), "EN", "GND")
-    ctx.rcl("R", "10k", (191, 92), "+3V3", "IO0")
+    ctx.rcl("R", "10k", (191, 92), "+3V3", boot_net)
     ctx.rcl("R", "470", (199, 92), "STATUS_LED", "LED_A")
     sch.place("D1", "Device", "LED", "LED_STATUS",
               "LED_SMD:LED_0402_1005Metric", (207, 100),
@@ -359,15 +377,23 @@ def add_mcu_c3(sch, ctx):
     c3gnd = {str(n): "GND" for n in
              [1, 2, 11, 14, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
               48, 49, 50, 51, 52, 53]}
+    # Straps (ESP32-C3 datasheet): GPIO9 low at reset = download boot (weak
+    # internal pull-up); GPIO8 must be high for download boot and floats at
+    # reset; GPIO2 floats, pull-up recommended. GPIO0 is NOT a C3 strap.
+    # Status LED moved off the GPIO8 strap to GPIO10.
     sch.place("U1", "nlink_parts", "ESP32-C3-MINI-1", "ESP32-C3-MINI-1-N4",
               "Espressif:ESP32-C3-MINI-1", (270, 70),
-              {"3": "+3V3", "8": "EN", "12": "IO0", "22": "STATUS_LED",
+              {"3": "+3V3", "8": "EN", "23": "BOOT", "16": "STATUS_LED",
+               "22": "IO8_STRAP", "5": "IO2_STRAP",
                "21": "UART_TX", "20": "UART_RX",   # GPIO7 tx, GPIO6 rx
                "26": "USB_DM", "27": "USB_DP",      # GPIO18/19 native USB
                **c3gnd})
+    # decoupling AT the module 3V3 pin (place within ~2 mm of pin 3)
     ctx.rcl("C", "100n", (300, 40), "+3V3", "GND")
     ctx.rcl("C", "10u", (308, 40), "+3V3", "GND",
             fp="Capacitor_SMD:C_0805_2012Metric")
+    ctx.rcl("R", "10k", (316, 40), "+3V3", "IO8_STRAP")
+    ctx.rcl("R", "10k", (324, 40), "+3V3", "IO2_STRAP")
 
 # ---------------------------------------------------------------------------
 # board stub with outline
@@ -394,6 +420,9 @@ def write_pcb(path, w, h):
 """)
 
 def write_pro(path, name):
+    if os.path.exists(path):
+        print(f"  (kept existing {path} - holds design rules/net classes)")
+        return
     json.dump({"meta": {"filename": f"{name}.kicad_pro", "version": 1},
                "boards": [], "libraries": {"pinned_footprint_libs": [],
                "pinned_symbol_libs": []}, "sheets": []},
@@ -420,14 +449,15 @@ def build(variant):
     ctx = Ctx(sch)
     sch.text(f"nternet-Link V4 · {name} — {title} · generated, netlist-verified"
              " — tidy placement freely, nets live in the labels", (30, 12), 2.5)
-    add_shared(sch, ctx)            # calc plug + ESD + bridge + 3V3 buck
+    lite = variant == "lite"
+    add_shared(sch, ctx, lite)      # calc plug + ESD + bridge + 3V3 buck
     if full:
         add_camera_sd(sch, ctx)     # OV5640 FPC + microSD
     # lite uses hole-free SMD pogo pads (TC2030 drills can't clear a board this small)
     j4_fp = ("Connector_PinHeader_1.27mm:PinHeader_2x03_P1.27mm_Vertical_SMD"
              if variant == "lite" else
              "Connector:Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
-    add_program(sch, ctx, j4_fp)    # prog pads + straps + LED
+    add_program(sch, ctx, j4_fp, "BOOT" if lite else "IO0")  # prog pads + straps + LED
     globals()[mcu_fn](sch, ctx)     # MCU section
     sch.write(os.path.join(d, f"{name}.kicad_sch"))
     write_pro(os.path.join(d, f"{name}.kicad_pro"), name)
@@ -435,5 +465,8 @@ def build(variant):
     print(f"wrote {name}")
 
 if __name__ == "__main__":
-    for v in MODELS:
+    import sys
+    # python3 generate_schematics.py            -> all variants
+    # python3 generate_schematics.py lite       -> just nlink-lite
+    for v in (sys.argv[1:] or list(MODELS)):
         build(v)

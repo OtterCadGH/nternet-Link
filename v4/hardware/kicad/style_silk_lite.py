@@ -50,7 +50,7 @@ F, BK = pcbnew.F_SilkS, pcbnew.B_SilkS
 text("nlink-lite", 59.2, 51.7, F, 1.1, bold=True)
 
 # J1 pins after rot180 at (52,62.6): 1=62.6 VBUS, 2=60.06 D-, 3=57.52 D+,
-# 4=54.98 NC, 5=52.44 GND. Labels just right of the holes.
+# 4=54.98 ID (tied to GND in v4.1), 5=52.44 GND. Labels just right of the holes.
 for label, y in [("V+", 62.6), ("D-", 60.06), ("D+", 57.52), ("G", 52.44)]:
     text(label, 54.0, y, F, 0.6)
 
@@ -67,7 +67,7 @@ for label, y in [("V+", 62.6), ("D-", 60.06), ("D+", 57.52), ("G", 52.44)]:
 # Block centered mid-board on the GND pour (x 60.8-67.0 y 55.4-59.6 verified
 # free of vias and back traces), rows still aligned with the pad rows.
 text("6:D+ 5:D-",   63.95, 56.23, BK, 0.55, mirror=True)
-text("4:IO0 3:EN",  63.95, 57.50, BK, 0.55, mirror=True)
+text("4:BOOT 3:EN", 63.95, 57.50, BK, 0.55, mirror=True)
 text("2:GND 1:3V3", 63.95, 58.77, BK, 0.55, mirror=True)
 text("PROG", 76.5, 60.4, BK, 0.7, mirror=True, bold=True)   # below connector
 text("nlink-lite v4", 58.5, 52.6, BK, 1.15, mirror=True, bold=True)

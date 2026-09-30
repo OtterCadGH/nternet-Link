@@ -11,7 +11,7 @@ Saves the board and exports /tmp/lite.dsn for routing.
 import sys, pcbnew
 
 BOARD_PATH = 'nlink-lite/nlink-lite.kicad_pcb'
-BACK_SET = {"J4", "R4", "C6", "R5"}
+BACK_SET = {"J4", "R6", "C5", "R7", "R2", "R3", "R9", "R10", "C6", "C7"}
 X0, Y0, X1, Y1 = 50, 50, 90, 65
 
 def mm(v): return pcbnew.ToMM(v)
