@@ -11,7 +11,7 @@ Over four generations the project grew from a soldered-in modification into a
 clean, reproducible, plug-in platform with a proper communication protocol and
 custom PCBs.
 
-[Discord](https://discord.gg/mB2T4Wp63e)
+[Discord](https://discord.gg/bBMqzaBu6B) · [Support on Ko-fi](https://ko-fi.com/nspired_hackers)
 
 > **Not affiliated with or endorsed by Texas Instruments.** This is an
 > embedded-systems and networking experiment. It is **not** designed or
@@ -99,7 +99,16 @@ protocol, no API keys in the source (they live in the device's flash), support
 for any OpenAI-compatible AI provider, a browser simulator, automated tests,
 and two custom circuit boards.
 
+## Support
+
+nternet-Link is a small side project, built in spare time and shared for free.
+If it's been useful to you and you'd like to chip in, tips go toward parts and
+the first run of ready made cables. No pressure at all, and thank you either way.
+
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nspired_hackers)
+
 ## License and spirit
 
 Open hardware and software. Modify, improve, and share. Built for learning
 about USB, serial protocols, embedded networking, and hardware interfacing.
+
